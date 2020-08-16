@@ -64,9 +64,9 @@
         <dependency>
             <groupId>pt.ipleiria.estg.dei.pi</groupId>
             <artifactId>voidchain-node</artifactId>
-            <version>0.9.0</version>
+            <version>0.9.1</version>
             <scope>system</scope>
-            <systemPath>${project.basedir}/lib/voidchain-node-0.9.0.jar</systemPath>
+            <systemPath>${project.basedir}/lib/voidchain-node-0.9.1.jar</systemPath>
         </dependency>
     </dependencies>
 
