@@ -24,8 +24,8 @@ public class BlockchainManager {
 
     private final BlockSyncClient blockSyncClient;
 
-    private Thread sendTransactionsThread;
-    private boolean sendTransactionsThreadStop = false;
+    private Thread transactionMessengerThread;
+    private boolean transactionMessengerThreadStop = false;
     private Thread refreshLocalChainThread;
     private boolean refreshLocalChainThreadStop = false;
 
@@ -42,6 +42,8 @@ public class BlockchainManager {
                 else
                     this.blockSyncClient.sync(false);
 
+                this.blockchain.reloadBlocksFromDisk();
+
                 try {
                     Thread.sleep(APIConfiguration.getInstance().getBlockSyncTimer());
                     if (refreshLocalChainThreadStop) return;
@@ -52,7 +54,44 @@ public class BlockchainManager {
             }
         });
         this.refreshLocalChainThread.start();
-        // TODO THREAD for sending transactions to network
+
+        this.transactionMessengerThread = new Thread(() -> {
+            APIConfiguration config = APIConfiguration.getInstance();
+
+            while (true) {
+                this.transactionPoolLock.lock();
+                if (this.transactionPool.size() == 1) {
+                    if (NetworkProxyManager.getInstance(config.getId()).
+                            sendTransaction(this.transactionPool.get(0)))
+                        this.transactionPool.remove(0);
+                } else if (this.transactionPool.size() > 1) {
+                    int max =  this.transactionPool.size();
+
+                    if (max > config.getMaxNumberOfTransactionToSend())
+                        max = config.getMaxNumberOfTransactionToSend();
+
+                    List<Transaction> transactionsSend = new ArrayList<>();
+                    for (int i = 0; i < max; i++) {
+                        Transaction t = this.transactionPool.remove(0);
+                        transactionsSend.add(t);
+                    }
+
+                    if (!NetworkProxyManager.getInstance(config.getId()).
+                            sendTransaction(transactionsSend))
+                        this.transactionPool.addAll(transactionsSend);
+                }
+                this.transactionPoolLock.unlock();
+
+                try {
+                    Thread.sleep(APIConfiguration.getInstance().getSendTransactionsTimer());
+                    if (transactionMessengerThreadStop) return;
+                } catch (InterruptedException e) {
+                    logger.error("Send Transactions to Network Thread error while waiting", e);
+                    this.transactionMessengerThread = null;
+                }
+            }
+        });
+        this.transactionMessengerThread.start();
     }
 
     public static BlockchainManager getInstance() {
@@ -97,14 +136,20 @@ public class BlockchainManager {
     public void close() {
         logger.info("Closing " + this.getClass().getName());
         try {
+            logger.info("Stopping Blockchain Sync thread");
             this.refreshLocalChainThreadStop = true;
             this.refreshLocalChainThread.join();
-            this.sendTransactionsThreadStop = true;
-            this.sendTransactionsThread.join();
+            logger.info("Blockchain Sync thread stopped");
+            logger.info("Stopping Transaction Messenger thread");
+            this.transactionMessengerThreadStop = true;
+            this.transactionMessengerThread.join();
+            logger.info("Transaction Messenger thread stopped");
         } catch (InterruptedException e) {
             logger.error("Error while joining " + this.getClass().getName() + " Threads", e);
             logger.info("Unable to confirm " + this.getClass().getName() + " threads shutdown, " +
                     "continuing");
         }
+
+        INSTANCE = null;
     }
 }

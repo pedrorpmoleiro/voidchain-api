@@ -19,4 +19,16 @@ public class APIConfiguration {
     public int getBlockSyncTimer() {
         return 60 * 1000;
     }
+
+    public int getSendTransactionsTimer() {
+        return 10 * 1000;
+    }
+
+    public int getMaxNumberOfTransactionToSend() {
+        return 15;
+    }
+
+    public boolean hasNode() {
+        return false;
+    }
 }
