@@ -31,4 +31,15 @@ public class APIConfiguration {
     public boolean hasNode() {
         return false;
     }
+
+    public boolean hasSync() {
+        if (!hasNode())
+            return false;
+
+        return false;
+    }
+
+    public static void createDefaultConfigFiles() {
+        // TODO
+    }
 }

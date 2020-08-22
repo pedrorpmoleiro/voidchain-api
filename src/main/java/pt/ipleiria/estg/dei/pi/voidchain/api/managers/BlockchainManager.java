@@ -1,15 +1,25 @@
 package pt.ipleiria.estg.dei.pi.voidchain.api.managers;
 
+import org.bouncycastle.util.encoders.Base64;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import pt.ipleiria.estg.dei.pi.voidchain.api.APIConfiguration;
+import pt.ipleiria.estg.dei.pi.voidchain.api.dtos.TransactionPostDTO;
+import pt.ipleiria.estg.dei.pi.voidchain.api.exceptions.BlockNotFoundException;
+import pt.ipleiria.estg.dei.pi.voidchain.api.exceptions.InternalErrorException;
+import pt.ipleiria.estg.dei.pi.voidchain.api.exceptions.TransactionNotFoundException;
+import pt.ipleiria.estg.dei.pi.voidchain.api.exceptions.TransactionTooBigException;
+import pt.ipleiria.estg.dei.pi.voidchain.blockchain.Block;
 import pt.ipleiria.estg.dei.pi.voidchain.blockchain.Blockchain;
 import pt.ipleiria.estg.dei.pi.voidchain.blockchain.Transaction;
 import pt.ipleiria.estg.dei.pi.voidchain.sync.BlockSyncClient;
+import pt.ipleiria.estg.dei.pi.voidchain.util.Configuration;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.io.IOException;
+import java.time.Instant;
+import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class BlockchainManager {
@@ -101,36 +111,102 @@ public class BlockchainManager {
         return INSTANCE;
     }
 
-    public boolean addTransactionToPool(Transaction transaction) {
-        int aux = this.transactionPool.size();
-
+    public Transaction createAndAddTransactionToPool(TransactionPostDTO transactionPost)
+            throws TransactionTooBigException {
+        Transaction t;
+        try {
+            t = new Transaction(Base64.decode(transactionPost.getData()), this.blockchain.getMostRecentBlock().
+                    getProtocolVersion(), Instant.now().toEpochMilli(), Base64.decode(transactionPost.getSignature()));
+        } catch (IllegalArgumentException e) {
+            logger.error("Error while creating transaction", e);
+            throw new TransactionTooBigException("Transaction size exceeds " + Configuration.getInstance().
+                    getTransactionMaxSize() + " bytes");
+        }
         transactionPoolLock.lock();
-        this.transactionPool.add(transaction);
+        this.transactionPool.add(t);
         transactionPoolLock.unlock();
 
-        if (aux == this.transactionPool.size() || (aux + 1) != this.transactionPool.size()) {
-            logger.error("Error occurred while adding transaction to memory pool", transaction, this.transactionPool);
-            return false;
-        }
-
-        logger.info("Transaction added to memory pool");
-        return true;
+        return t;
     }
 
-    public boolean addTransactionsToPool(List<Transaction> transactions) {
-        int aux = this.transactionPool.size();
+    public Transaction getTransaction(byte[] id) throws TransactionNotFoundException {
+        List<Integer> blocksDisk = Blockchain.getBlockFileHeightArray();
+        Collections.reverse(blocksDisk);
 
-        transactionPoolLock.lock();
-        this.transactionPool.addAll(transactions);
-        transactionPoolLock.unlock();
+        for (Integer i : blocksDisk) {
+            Block b;
+            try {
+                b = this.blockchain.getBlock(i);
+            } catch (IOException | ClassNotFoundException e) {
+                logger.error("Error while retrieving block from disk", e);
+                continue;
+            }
 
-        if (aux == this.transactionPool.size() || (aux + transactions.size()) != this.transactionPool.size()) {
-            logger.error("Error occurred while adding transactions to memory pool", transactions, this.transactionPool);
-            return false;
+            for (byte[] hash : b.getTransactions().keySet())
+                if (Arrays.equals(id, hash))
+                    return b.getTransactions().get(hash);
         }
 
-        logger.info("Transactions added to memory pool");
-        return true;
+        throw new TransactionNotFoundException("Requested transaction doesn't exists in the local chain");
+    }
+
+    public List<Transaction> getTransactionInBlock(Block block) {
+        return new ArrayList<>(block.getTransactions().values());
+    }
+
+    public Block getBlock(String id) throws BlockNotFoundException {
+        final byte[] bId = Base64.decode(id);
+
+        List<Integer> blocksDisk = Blockchain.getBlockFileHeightArray();
+        Collections.reverse(blocksDisk);
+
+        for (Integer i : blocksDisk) {
+            Block b;
+            try {
+                b = this.blockchain.getBlock(i);
+            } catch (IOException | ClassNotFoundException e) {
+                logger.error("Error while retrieving block from disk", e);
+                continue;
+            }
+
+            if (Arrays.equals(bId, b.getHash()))
+                return b;
+        }
+
+        throw new BlockNotFoundException("Requested block doesn't exists in the local chain");
+    }
+
+    public Block getBlock(int blockHeight) throws BlockNotFoundException {
+        final int highestBlock = this.blockchain.getMostRecentBlock().getBlockHeight();
+        if (blockHeight > highestBlock)
+            throw new BlockNotFoundException("Requested block [" + blockHeight + "] doesn't exist, " + highestBlock +
+                    " is the highest block in the chain");
+        else if (blockHeight < 0)
+            throw new BlockNotFoundException("Requested block [" + blockHeight + "] doesn't exist, " +
+                    "block height cannot be bellow zero");
+
+        try {
+            return this.blockchain.getBlock(blockHeight);
+        } catch (IOException | ClassNotFoundException e) {
+            logger.error("Unable to retrieve block from disk", e);
+            throw new BlockNotFoundException("Error while retrieving block");
+        }
+    }
+
+    public List<Block> getAllBlocks() throws InternalErrorException {
+        List<Block> blocks = new ArrayList<>();
+        List<Integer> blocksDisk = Blockchain.getBlockFileHeightArray();
+        Collections.reverse(blocksDisk);
+
+        for (Integer i : blocksDisk)
+            try {
+                blocks.add(this.blockchain.getBlock(i));
+            } catch (IOException | ClassNotFoundException e) {
+                logger.error("Error while adding block [" + i + "] to block list", e);
+                throw new InternalErrorException("Error creating list of blocks");
+            }
+
+        return blocks;
     }
 
     public void close() {
