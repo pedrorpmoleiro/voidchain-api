@@ -1,6 +1,7 @@
 package pt.ipleiria.estg.dei.pi.voidchain.api.dtos;
 
 import javax.validation.constraints.NotNull;
+
 import java.io.Serializable;
 
 public class TransactionPostDTO implements Serializable {
@@ -20,12 +21,12 @@ public class TransactionPostDTO implements Serializable {
         return data;
     }
 
-    public String getSignature() {
-        return signature;
-    }
-
     public void setData(String data) {
         this.data = data;
+    }
+
+    public String getSignature() {
+        return signature;
     }
 
     public void setSignature(String signature) {

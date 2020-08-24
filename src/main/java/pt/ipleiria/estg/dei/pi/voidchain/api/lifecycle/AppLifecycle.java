@@ -59,7 +59,7 @@ public class AppLifecycle {
         if (apiConfig.hasNode())
             node.close();
 
-        BlockchainManager.getInstance().close();
         NetworkProxyManager.getInstance(apiConfig.getId()).close();
+        BlockchainManager.getInstance().close();
     }
 }
