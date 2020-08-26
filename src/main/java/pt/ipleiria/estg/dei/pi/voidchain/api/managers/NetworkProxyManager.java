@@ -23,10 +23,25 @@ public class NetworkProxyManager {
         this.proxy = new ServiceProxy(id);
     }
 
-    public static NetworkProxyManager getInstance(int id) {
+    private NetworkProxyManager(ServiceProxy proxy) {
+        this.proxy = proxy;
+    }
+
+    public static NetworkProxyManager createInstance(int id) {
         if (INSTANCE == null)
             INSTANCE = new NetworkProxyManager(id);
 
+        return INSTANCE;
+    }
+
+    public static NetworkProxyManager createInstance(ServiceProxy proxy) {
+        if (INSTANCE == null)
+            INSTANCE = new NetworkProxyManager(proxy);
+
+        return INSTANCE;
+    }
+
+    public static NetworkProxyManager getInstance() {
         return INSTANCE;
     }
 

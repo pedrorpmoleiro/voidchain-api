@@ -1,6 +1,7 @@
 package pt.ipleiria.estg.dei.pi.voidchain.api.resources;
 
 import org.bouncycastle.util.encoders.Base64;
+
 import pt.ipleiria.estg.dei.pi.voidchain.api.dtos.BlockDTO;
 import pt.ipleiria.estg.dei.pi.voidchain.api.dtos.BlockHeaderDTO;
 import pt.ipleiria.estg.dei.pi.voidchain.api.dtos.BlockNoTransactionsDTO;
@@ -8,11 +9,11 @@ import pt.ipleiria.estg.dei.pi.voidchain.api.exceptions.BlockNotFoundException;
 import pt.ipleiria.estg.dei.pi.voidchain.api.exceptions.InternalErrorException;
 import pt.ipleiria.estg.dei.pi.voidchain.api.managers.BlockchainManager;
 import pt.ipleiria.estg.dei.pi.voidchain.blockchain.Block;
-import pt.ipleiria.estg.dei.pi.voidchain.blockchain.BlockHeader;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;

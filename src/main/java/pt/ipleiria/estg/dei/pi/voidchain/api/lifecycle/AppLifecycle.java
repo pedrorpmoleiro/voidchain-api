@@ -27,29 +27,27 @@ public class AppLifecycle {
 
     private Node node;
 
-    void onStart(@Observes StartupEvent ev) {
+    void onStart(@Observes StartupEvent ev) throws IOException {
         logger.info("The application is starting...");
 
         if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null)
             Security.addProvider(new BouncyCastleProvider());
 
-        /*try {
-            APIConfiguration.createDefaultConfigFiles();
-            Storage.createDefaultConfigFiles();
-        } catch (IOException e) {
-            logger.error("Unable to create default config files", e);
-        }*/
+        APIConfiguration.createDefaultConfigFiles();
+        Storage.createDefaultConfigFiles();
 
         APIConfiguration apiConfig = APIConfiguration.getInstance();
 
         KeyGenerator.generatePubAndPrivKeys(apiConfig.getId());
         KeyGenerator.generateSSLKey(apiConfig.getId());
 
-        BlockchainManager.getInstance();
-        NetworkProxyManager.getInstance(apiConfig.getId());
-
-        if (apiConfig.hasNode())
+        if (apiConfig.hasNode()) {
             node = new Node(apiConfig.getId(), apiConfig.hasSync());
+            NetworkProxyManager.createInstance(node.getMessengerProxy());
+        } else
+            NetworkProxyManager.createInstance(apiConfig.getId());
+
+        BlockchainManager.getInstance();
     }
 
     void onStop(@Observes ShutdownEvent ev) {
@@ -59,7 +57,7 @@ public class AppLifecycle {
         if (apiConfig.hasNode())
             node.close();
 
-        NetworkProxyManager.getInstance(apiConfig.getId()).close();
+        NetworkProxyManager.getInstance().close();
         BlockchainManager.getInstance().close();
     }
 }

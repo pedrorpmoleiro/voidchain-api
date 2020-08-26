@@ -42,8 +42,7 @@ public class BlockchainManager {
     private BlockchainManager() {
         this.blockchain = Blockchain.getInstance();
         this.transactionPool = new ArrayList<>();
-        this.blockSyncClient = new BlockSyncClient(NetworkProxyManager.getInstance(APIConfiguration.getInstance().
-                getId()).getProxy());
+        this.blockSyncClient = new BlockSyncClient(NetworkProxyManager.getInstance().getProxy());
 
         this.refreshLocalChainThread = new Thread(() -> {
             while (true) {
@@ -63,7 +62,8 @@ public class BlockchainManager {
                 }
             }
         });
-        this.refreshLocalChainThread.start();
+        if (!APIConfiguration.getInstance().hasNode())
+            this.refreshLocalChainThread.start();
 
         this.transactionMessengerThread = new Thread(() -> {
             APIConfiguration config = APIConfiguration.getInstance();
@@ -71,11 +71,11 @@ public class BlockchainManager {
             while (true) {
                 this.transactionPoolLock.lock();
                 if (this.transactionPool.size() == 1) {
-                    if (NetworkProxyManager.getInstance(config.getId()).
+                    if (NetworkProxyManager.getInstance().
                             sendTransaction(this.transactionPool.get(0)))
                         this.transactionPool.remove(0);
                 } else if (this.transactionPool.size() > 1) {
-                    int max =  this.transactionPool.size();
+                    int max = this.transactionPool.size();
 
                     if (max > config.getMaxNumberOfTransactionToSend())
                         max = config.getMaxNumberOfTransactionToSend();
@@ -86,14 +86,14 @@ public class BlockchainManager {
                         transactionsSend.add(t);
                     }
 
-                    if (!NetworkProxyManager.getInstance(config.getId()).
+                    if (!NetworkProxyManager.getInstance().
                             sendTransaction(transactionsSend))
                         this.transactionPool.addAll(transactionsSend);
                 }
                 this.transactionPoolLock.unlock();
 
                 try {
-                    Thread.sleep(APIConfiguration.getInstance().getSendTransactionsTimer());
+                    Thread.sleep(config.getSendTransactionsTimer());
                     if (transactionMessengerThreadStop) return;
                 } catch (InterruptedException e) {
                     logger.error("Send Transactions to Network Thread error while waiting", e);
