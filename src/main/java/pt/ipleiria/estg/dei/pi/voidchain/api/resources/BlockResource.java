@@ -1,6 +1,6 @@
 package pt.ipleiria.estg.dei.pi.voidchain.api.resources;
 
-import org.bouncycastle.util.encoders.Base64;
+import bitcoinj.Base58;
 
 import pt.ipleiria.estg.dei.pi.voidchain.api.dtos.BlockDTO;
 import pt.ipleiria.estg.dei.pi.voidchain.api.dtos.BlockHeaderDTO;
@@ -28,13 +28,13 @@ public class BlockResource {
                 TransactionResource.toDTOs(new ArrayList<>(block.getTransactions().values())),
                 new BlockHeaderDTO(
                         block.getTimestamp(),
-                        Base64.toBase64String(block.getPreviousBlockHash()),
+                        Base58.encode(block.getPreviousBlockHash()),
                         block.getProtocolVersion(),
-                        Base64.toBase64String(block.getMerkleRoot())
+                        Base58.encode(block.getMerkleRoot())
                 ),
                 block.getTransactionCounter(),
                 block.getBlockHeight(),
-                Base64.toBase64String(block.getHash()),
+                Base58.encode(block.getHash()),
                 block.getSize()
         );
     }
@@ -47,13 +47,13 @@ public class BlockResource {
         return new BlockNoTransactionsDTO(
                 new BlockHeaderDTO(
                         block.getTimestamp(),
-                        Base64.toBase64String(block.getPreviousBlockHash()),
+                        Base58.encode(block.getPreviousBlockHash()),
                         block.getProtocolVersion(),
-                        Base64.toBase64String(block.getMerkleRoot())
+                        Base58.encode(block.getMerkleRoot())
                 ),
                 block.getTransactionCounter(),
                 block.getBlockHeight(),
-                Base64.toBase64String(block.getHash()),
+                Base58.encode(block.getHash()),
                 block.getSize()
         );
     }

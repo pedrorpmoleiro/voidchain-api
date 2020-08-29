@@ -1,6 +1,6 @@
 package pt.ipleiria.estg.dei.pi.voidchain.api.resources;
 
-import org.bouncycastle.util.encoders.Base64;
+import bitcoinj.Base58;
 
 import pt.ipleiria.estg.dei.pi.voidchain.api.dtos.TransactionGetDTO;
 import pt.ipleiria.estg.dei.pi.voidchain.api.dtos.TransactionPostDTO;
@@ -26,10 +26,10 @@ public class TransactionResource {
     public static TransactionGetDTO toDTO(Transaction transaction) {
         return new TransactionGetDTO(
                 transaction.getTimestamp(),
-                Base64.toBase64String(transaction.getData()),
+                Base58.encode(transaction.getData()),
                 transaction.getProtocolVersion(),
-                Base64.toBase64String(transaction.getSignature()),
-                Base64.toBase64String(transaction.getHash())
+                Base58.encode(transaction.getSignature()),
+                Base58.encode(transaction.getHash())
         );
     }
 
@@ -48,9 +48,7 @@ public class TransactionResource {
     @GET
     @Path("/{txId}")
     public Response getTransaction(@PathParam("txId") String idString) throws TransactionNotFoundException {
-        byte[] transactionId = Base64.decode(idString);
-
-        Transaction t = BlockchainManager.getInstance().getTransaction(transactionId);
+        Transaction t = BlockchainManager.getInstance().getTransaction(idString);
 
         return Response.status(Response.Status.OK).entity(toDTO(t)).build();
     }

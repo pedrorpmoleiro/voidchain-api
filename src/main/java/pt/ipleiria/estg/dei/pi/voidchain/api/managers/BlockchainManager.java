@@ -1,6 +1,6 @@
 package pt.ipleiria.estg.dei.pi.voidchain.api.managers;
 
-import org.bouncycastle.util.encoders.Base64;
+import bitcoinj.Base58;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -115,8 +115,8 @@ public class BlockchainManager {
             throws TransactionTooBigException {
         Transaction t;
         try {
-            t = new Transaction(Base64.decode(transactionPost.getData()), this.blockchain.getMostRecentBlock().
-                    getProtocolVersion(), Instant.now().toEpochMilli(), Base64.decode(transactionPost.getSignature()));
+            t = new Transaction(Base58.decode(transactionPost.getData()), this.blockchain.getMostRecentBlock().
+                    getProtocolVersion(), Instant.now().toEpochMilli(), Base58.decode(transactionPost.getSignature()));
         } catch (IllegalArgumentException e) {
             logger.error("Error while creating transaction", e);
             throw new TransactionTooBigException("Transaction size exceeds " + Configuration.getInstance().
@@ -129,7 +129,9 @@ public class BlockchainManager {
         return t;
     }
 
-    public Transaction getTransaction(byte[] id) throws TransactionNotFoundException {
+    public Transaction getTransaction(String idString) throws TransactionNotFoundException {
+        byte[] id = Base58.decode(idString);
+
         List<Integer> blocksDisk = Blockchain.getBlockFileHeightArray();
         Collections.reverse(blocksDisk);
 
@@ -155,7 +157,7 @@ public class BlockchainManager {
     }
 
     public Block getBlock(String id) throws BlockNotFoundException {
-        final byte[] bId = Base64.decode(id);
+        final byte[] bId = Base58.decode(id);
 
         List<Integer> blocksDisk = Blockchain.getBlockFileHeightArray();
         Collections.reverse(blocksDisk);
