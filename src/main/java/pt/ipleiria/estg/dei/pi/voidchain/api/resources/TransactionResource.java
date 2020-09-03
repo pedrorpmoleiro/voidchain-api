@@ -5,6 +5,7 @@ import bitcoinj.Base58;
 import pt.ipleiria.estg.dei.pi.voidchain.api.dtos.TransactionGetDTO;
 import pt.ipleiria.estg.dei.pi.voidchain.api.dtos.TransactionPostDTO;
 import pt.ipleiria.estg.dei.pi.voidchain.api.exceptions.BlockNotFoundException;
+import pt.ipleiria.estg.dei.pi.voidchain.api.exceptions.InternalErrorException;
 import pt.ipleiria.estg.dei.pi.voidchain.api.exceptions.TransactionNotFoundException;
 import pt.ipleiria.estg.dei.pi.voidchain.api.exceptions.TransactionTooBigException;
 import pt.ipleiria.estg.dei.pi.voidchain.api.managers.BlockchainManager;
@@ -50,7 +51,13 @@ public class TransactionResource {
     public Response getTransaction(@PathParam("txId") String idString) throws TransactionNotFoundException {
         Transaction t = BlockchainManager.getInstance().getTransaction(idString);
 
-        return Response.status(Response.Status.OK).entity(toDTO(t)).build();
+        return Response.ok(toDTO(t)).build();
+    }
+
+    @GET
+    @Path("/status/{txId}")
+    public Response getTransactionStatus(@PathParam("txId") String idString) {
+        return Response.ok(BlockchainManager.getInstance().getTransactionStatus(idString)).build();
     }
 
     @GET
@@ -58,8 +65,8 @@ public class TransactionResource {
     public Response getAllTransactionsInBlock(@PathParam("bId") String blockId) throws BlockNotFoundException {
         BlockchainManager blockchainManager = BlockchainManager.getInstance();
 
-        return Response.status(Response.Status.OK).entity(toDTOs(blockchainManager.
-                getTransactionInBlock(blockchainManager.getBlock(blockId)))).build();
+        return Response.ok(toDTOs(blockchainManager.getTransactionInBlock(blockchainManager.getBlock(blockId))))
+                .build();
     }
 
     @GET
@@ -67,7 +74,19 @@ public class TransactionResource {
     public Response getAllTransactionsInBlock(@PathParam("bHeight") int blockHeight) throws BlockNotFoundException {
         BlockchainManager blockchainManager = BlockchainManager.getInstance();
 
-        return Response.status(Response.Status.OK).entity(toDTOs(blockchainManager.
-                getTransactionInBlock(blockchainManager.getBlock(blockHeight)))).build();
+        return Response.ok(toDTOs(blockchainManager.getTransactionInBlock(blockchainManager.getBlock(blockHeight))))
+                .build();
+    }
+
+    @GET
+    @Path("/memory-pool")
+    public Response getAllTransactionsInMemPool() {
+        return Response.ok(toDTOs(BlockchainManager.getInstance().getTransactionPool())).build();
+    }
+
+    @GET
+    @Path("/user/{oId}")
+    public Response getAllTransactionsOfOwner(@PathParam("oId") String ownerId) throws InternalErrorException {
+        return Response.ok(toDTOs(BlockchainManager.getInstance().getTransactionOfOwner(ownerId))).build();
     }
 }

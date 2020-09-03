@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import pt.ipleiria.estg.dei.pi.voidchain.api.APIConfiguration;
+import pt.ipleiria.estg.dei.pi.voidchain.api.TransactionStatusAPI;
 import pt.ipleiria.estg.dei.pi.voidchain.api.dtos.TransactionPostDTO;
 import pt.ipleiria.estg.dei.pi.voidchain.api.exceptions.BlockNotFoundException;
 import pt.ipleiria.estg.dei.pi.voidchain.api.exceptions.InternalErrorException;
@@ -14,10 +15,16 @@ import pt.ipleiria.estg.dei.pi.voidchain.api.exceptions.TransactionTooBigExcepti
 import pt.ipleiria.estg.dei.pi.voidchain.blockchain.Block;
 import pt.ipleiria.estg.dei.pi.voidchain.blockchain.Blockchain;
 import pt.ipleiria.estg.dei.pi.voidchain.blockchain.Transaction;
+import pt.ipleiria.estg.dei.pi.voidchain.blockchain.TransactionStatus;
 import pt.ipleiria.estg.dei.pi.voidchain.sync.BlockSyncClient;
 import pt.ipleiria.estg.dei.pi.voidchain.util.Configuration;
 
 import java.io.IOException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.SignatureException;
+import java.security.spec.InvalidKeySpecException;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
@@ -36,8 +43,14 @@ public class BlockchainManager {
 
     private Thread transactionMessengerThread;
     private boolean transactionMessengerThreadStop = false;
+
     private Thread refreshLocalChainThread;
     private boolean refreshLocalChainThreadStop = false;
+
+    private Thread blockchainValidationCheckThread;
+    private boolean blockchainValidationCheckThreadStop = false;
+
+    private boolean refreshAllBlocks = false;
 
     private BlockchainManager() {
         this.blockchain = Blockchain.getInstance();
@@ -46,8 +59,10 @@ public class BlockchainManager {
 
         this.refreshLocalChainThread = new Thread(() -> {
             while (true) {
-                if (Blockchain.getBlockFileHeightArray() == null)
+                if (Blockchain.getBlockFileHeightArray() == null || this.refreshAllBlocks) {
                     this.blockSyncClient.sync(true);
+                    this.refreshAllBlocks = false;
+                }
                 else
                     this.blockSyncClient.sync(false);
 
@@ -55,13 +70,30 @@ public class BlockchainManager {
 
                 try {
                     Thread.sleep(APIConfiguration.getInstance().getBlockSyncTimer());
-                    if (refreshLocalChainThreadStop) return;
+                    if (this.refreshLocalChainThreadStop) return;
                 } catch (InterruptedException e) {
                     logger.error("Block Proposal Thread error while waiting", e);
                     this.refreshLocalChainThread = null;
                 }
             }
         });
+
+        this.blockchainValidationCheckThread = new Thread(() -> {
+            while (true) {
+                if (!this.blockchain.isChainValid())
+                    this.refreshAllBlocks = true;
+
+                try {
+                    Thread.sleep(Configuration.getInstance().getBlockchainValidTimer());
+                    if (blockchainValidationCheckThreadStop) return;
+                } catch (InterruptedException e) {
+                    logger.error("Blockchain Validation Thread error while waiting", e);
+                    this.blockchainValidationCheckThread = null;
+                }
+            }
+        });
+        this.blockchainValidationCheckThread.start();
+
         if (!APIConfiguration.getInstance().hasNode())
             this.refreshLocalChainThread.start();
 
@@ -211,6 +243,76 @@ public class BlockchainManager {
         return blocks;
     }
 
+    public TransactionStatusAPI getTransactionStatus(String idString) {
+        byte[] id = Base58.decode(idString);
+
+        for (Transaction t : this.transactionPool)
+            if (Arrays.equals(t.getHash(), id))
+                return TransactionStatusAPI.IN_API_MEM_POOL;
+
+        List<Integer> blocksDisk = Blockchain.getBlockFileHeightArray();
+        Collections.reverse(blocksDisk);
+
+        for (Integer i : blocksDisk) {
+            Block b;
+            try {
+                b = this.blockchain.getBlock(i);
+            } catch (IOException | ClassNotFoundException e) {
+                logger.error("Error while retrieving block from disk", e);
+                continue;
+            }
+
+            for (byte[] hash : b.getTransactions().keySet())
+                if (Arrays.equals(id, hash))
+                    return TransactionStatusAPI.IN_BLOCK;
+        }
+
+        TransactionStatus status = NetworkProxyManager.getInstance().getTransactionStatus(id);
+
+        switch (status) {
+            case IN_MEM_POOL:
+                return TransactionStatusAPI.IN_NETWORK_MEM_POOL;
+            case IN_BLOCK:
+                return TransactionStatusAPI.IN_BLOCK;
+            default:
+                return TransactionStatusAPI.UNKNOWN;
+        }
+    }
+
+    public boolean isChainValid() {
+        if (this.blockchain.isChainValid())
+            return true;
+        else {
+            logger.warn("Local chain is invalid, re downloading all blocks from network");
+            this.refreshAllBlocks = true;
+            return false;
+        }
+    }
+
+    public List<Transaction> getTransactionPool() {
+        return new ArrayList<>(this.transactionPool);
+    }
+
+    public List<Transaction> getTransactionOfOwner(String ownerPubKey) throws InternalErrorException {
+        List<Transaction> transactions = new ArrayList<>();
+
+        List<Block> blocks = getAllBlocks();
+        byte[] pubKeyBytes = Base58.decode(ownerPubKey);
+
+        for (Block b : blocks)
+            for (Transaction t : b.getTransactions().values())
+                try {
+                    if (t.verifySignature(pubKeyBytes))
+                        transactions.add(t);
+                } catch (NoSuchAlgorithmException | NoSuchProviderException | InvalidKeySpecException |
+                        InvalidKeyException | SignatureException | IOException e) {
+                    logger.error("Unable to verify signature of transaction: " + Base58.encode(t.getHash()));
+                    throw new InternalErrorException("Error creating list of transactions");
+                }
+
+        return transactions;
+    }
+
     public void close() {
         logger.info("Closing " + this.getClass().getName());
         try {
@@ -222,6 +324,9 @@ public class BlockchainManager {
             this.transactionMessengerThreadStop = true;
             this.transactionMessengerThread.join();
             logger.info("Transaction Messenger thread stopped");
+            this.blockchainValidationCheckThreadStop = true;
+            this.blockchainValidationCheckThread.join();
+            logger.info("Blockchain Validation thread stopped");
         } catch (InterruptedException e) {
             logger.error("Error while joining " + this.getClass().getName() + " Threads", e);
             logger.info("Unable to confirm " + this.getClass().getName() + " threads shutdown, " +

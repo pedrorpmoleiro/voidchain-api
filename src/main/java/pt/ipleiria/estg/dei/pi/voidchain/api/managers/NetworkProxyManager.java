@@ -6,9 +6,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import pt.ipleiria.estg.dei.pi.voidchain.blockchain.Transaction;
+import pt.ipleiria.estg.dei.pi.voidchain.blockchain.TransactionStatus;
 import pt.ipleiria.estg.dei.pi.voidchain.client.ClientMessage;
 import pt.ipleiria.estg.dei.pi.voidchain.client.ClientMessageType;
 
+import javax.swing.*;
 import java.io.*;
 import java.util.List;
 
@@ -207,6 +209,109 @@ public class NetworkProxyManager {
 
             logger.debug("Last consensus leader node id: " + leader);
             return leader;
+        } catch (IOException ex) {
+            logger.error("An error has occurred", ex);
+            return -1;
+        }
+    }
+
+    public TransactionStatus getTransactionStatus(byte[] transactionHash) {
+        logger.debug("Sending TRANSACTION_STATUS request to network");
+        try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
+             ObjectOutput objOut = new ObjectOutputStream(byteOut)) {
+
+            ClientMessage req = new ClientMessage(ClientMessageType.TRANSACTION_STATUS, transactionHash);
+            objOut.writeObject(req);
+
+            objOut.flush();
+            byteOut.flush();
+
+            byte[] reply = proxy.invokeUnordered(byteOut.toByteArray());
+
+            if (reply.length == 0) {
+                logger.error("Empty reply from network");
+                return TransactionStatus.UNKNOWN;
+            }
+
+            ByteArrayInputStream byteIn = new ByteArrayInputStream(reply);
+            ObjectInput objIn = new ObjectInputStream(byteIn);
+
+            TransactionStatus status = (TransactionStatus) objIn.readObject();
+
+            objIn.close();
+            byteIn.close();
+
+            logger.debug("Transaction Status: " + status);
+            return status;
+        } catch (IOException | ClassNotFoundException ex) {
+            logger.error("An error has occurred", ex);
+            return TransactionStatus.UNKNOWN;
+        }
+    }
+
+    public boolean isChainValid() {
+        logger.debug("Sending IS_CHAIN_VALID request to network");
+        try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
+             ObjectOutput objOut = new ObjectOutputStream(byteOut)) {
+
+            ClientMessage req = new ClientMessage(ClientMessageType.IS_CHAIN_VALID);
+            objOut.writeObject(req);
+
+            objOut.flush();
+            byteOut.flush();
+
+            byte[] reply = proxy.invokeOrdered(byteOut.toByteArray());
+
+            if (reply.length == 0) {
+                logger.error("Empty reply from replicas");
+                return false;
+            }
+
+            ByteArrayInputStream byteIn = new ByteArrayInputStream(reply);
+            ObjectInput objIn = new ObjectInputStream(byteIn);
+
+            boolean isValid = objIn.readBoolean();
+
+            objIn.close();
+            byteIn.close();
+
+            logger.debug("Is network chain valid: " + isValid);
+            return isValid;
+
+        } catch (IOException ex) {
+            logger.error("An error has occurred", ex);
+            return false;
+        }
+    }
+
+    public int getAmountOfNodes() {
+        logger.debug("Sending NUMBER_NODES request to network");
+        try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
+             ObjectOutput objOut = new ObjectOutputStream(byteOut)) {
+
+            ClientMessage req = new ClientMessage(ClientMessageType.NUMBER_NODES);
+            objOut.writeObject(req);
+
+            objOut.flush();
+            byteOut.flush();
+
+            byte[] reply = proxy.invokeUnordered(byteOut.toByteArray());
+
+            if (reply.length == 0) {
+                logger.error("Empty reply from network");
+                return -1;
+            }
+
+            ByteArrayInputStream byteIn = new ByteArrayInputStream(reply);
+            ObjectInput objIn = new ObjectInputStream(byteIn);
+
+            int numNodes = objIn.readInt();
+
+            objIn.close();
+            byteIn.close();
+
+            logger.debug(numNodes + " nodes are connected");
+            return numNodes;
         } catch (IOException ex) {
             logger.error("An error has occurred", ex);
             return -1;

@@ -65,42 +65,36 @@ public class BlockResource {
     @GET
     @Path("/")
     public Response getAllBlocks() throws InternalErrorException {
-        return Response.status(Response.Status.OK).entity(toDTOs(BlockchainManager.getInstance().getAllBlocks()))
-                .build();
+        return Response.ok(toDTOs(BlockchainManager.getInstance().getAllBlocks())).build();
     }
 
     @GET
     @Path("/no-transactions")
     public Response getAllBlocksNoTransactions() throws InternalErrorException {
-        return Response.status(Response.Status.OK).entity(toDTOsNoTransacion(BlockchainManager.getInstance()
-                .getAllBlocks())).build();
+        return Response.ok(toDTOsNoTransacion(BlockchainManager.getInstance().getAllBlocks())).build();
     }
 
     @GET
     @Path("/{bId}")
     public Response getBlock(@PathParam("bId") String blockId) throws BlockNotFoundException {
-        return Response.status(Response.Status.OK).entity(toDTO(BlockchainManager.getInstance()
-                .getBlock(blockId))).build();
+        return Response.ok(toDTO(BlockchainManager.getInstance().getBlock(blockId))).build();
     }
 
     @GET
     @Path("/{bId}/no-transactions")
     public Response getBlockNoTransactions(@PathParam("bId") String blockId) throws BlockNotFoundException {
-        return Response.status(Response.Status.OK).entity(toDTONoTransaction(BlockchainManager.getInstance()
-                .getBlock(blockId))).build();
+        return Response.ok(toDTONoTransaction(BlockchainManager.getInstance().getBlock(blockId))).build();
     }
 
     @GET
     @Path("/height/{bHeight}")
     public Response getBlock(@PathParam("bHeight") int blockHeight) throws BlockNotFoundException {
-        return Response.status(Response.Status.OK).entity(toDTO(BlockchainManager.getInstance()
-                .getBlock(blockHeight))).build();
+        return Response.ok(toDTO(BlockchainManager.getInstance().getBlock(blockHeight))).build();
     }
 
     @GET
     @Path("/height/{bHeight}/no-transactions")
     public Response getBlockNoTransactions(@PathParam("bHeight") int blockHeight) throws BlockNotFoundException {
-        return Response.status(Response.Status.OK).entity(toDTONoTransaction(BlockchainManager.getInstance()
-                .getBlock(blockHeight))).build();
+        return Response.ok(toDTONoTransaction(BlockchainManager.getInstance().getBlock(blockHeight))).build();
     }
 }
