@@ -64,7 +64,7 @@ public class NetworkProxyManager {
 
             byte[] reply = proxy.invokeUnordered(byteOut.toByteArray());
 
-            if (reply.length == 0) {
+            if (reply == null || reply.length == 0) {
                 logger.error("Empty reply from network");
                 return -1;
             }
@@ -110,7 +110,7 @@ public class NetworkProxyManager {
 
             byte[] reply = proxy.invokeOrdered(byteOut.toByteArray());
 
-            if (reply.length == 0) {
+            if (reply == null || reply.length == 0) {
                 logger.error("Empty reply from network");
                 return false;
             }
@@ -158,7 +158,7 @@ public class NetworkProxyManager {
 
             byte[] reply = proxy.invokeOrdered(byteOut.toByteArray());
 
-            if (reply.length == 0) {
+            if (reply == null || reply.length == 0) {
                 logger.error("Empty reply from network");
                 return false;
             }
@@ -194,7 +194,7 @@ public class NetworkProxyManager {
 
             byte[] reply = proxy.invokeUnordered(byteOut.toByteArray());
 
-            if (reply.length == 0) {
+            if (reply == null || reply.length == 0) {
                 logger.error("Empty reply from network");
                 return -1;
             }
@@ -228,7 +228,7 @@ public class NetworkProxyManager {
 
             byte[] reply = proxy.invokeUnordered(byteOut.toByteArray());
 
-            if (reply.length == 0) {
+            if (reply == null || reply.length == 0) {
                 logger.error("Empty reply from network");
                 return TransactionStatus.UNKNOWN;
             }
@@ -262,7 +262,7 @@ public class NetworkProxyManager {
 
             byte[] reply = proxy.invokeOrdered(byteOut.toByteArray());
 
-            if (reply.length == 0) {
+            if (reply == null || reply.length == 0) {
                 logger.error("Empty reply from replicas");
                 return false;
             }
@@ -297,7 +297,7 @@ public class NetworkProxyManager {
 
             byte[] reply = proxy.invokeUnordered(byteOut.toByteArray());
 
-            if (reply.length == 0) {
+            if (reply == null || reply.length == 0) {
                 logger.error("Empty reply from network");
                 return -1;
             }

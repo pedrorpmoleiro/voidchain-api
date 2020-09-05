@@ -25,7 +25,7 @@
 
         <surefire-plugin.version>3.0.0-M5</surefire-plugin.version>
 
-        <voidchain-node.version>0.9.8</voidchain-node.version>
+        <voidchain-node.version>0.9.9</voidchain-node.version>
     </properties>
 
     <dependencyManagement>
