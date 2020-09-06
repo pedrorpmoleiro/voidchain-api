@@ -10,7 +10,6 @@ import pt.ipleiria.estg.dei.pi.voidchain.blockchain.TransactionStatus;
 import pt.ipleiria.estg.dei.pi.voidchain.client.ClientMessage;
 import pt.ipleiria.estg.dei.pi.voidchain.client.ClientMessageType;
 
-import javax.swing.*;
 import java.io.*;
 import java.util.List;
 

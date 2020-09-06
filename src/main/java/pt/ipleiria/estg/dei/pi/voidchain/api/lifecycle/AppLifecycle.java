@@ -12,7 +12,7 @@ import pt.ipleiria.estg.dei.pi.voidchain.api.APIConfiguration;
 import pt.ipleiria.estg.dei.pi.voidchain.api.managers.BlockchainManager;
 import pt.ipleiria.estg.dei.pi.voidchain.api.managers.NetworkProxyManager;
 import pt.ipleiria.estg.dei.pi.voidchain.node.Node;
-import pt.ipleiria.estg.dei.pi.voidchain.util.KeyGenerator;
+import pt.ipleiria.estg.dei.pi.voidchain.util.Keys;
 import pt.ipleiria.estg.dei.pi.voidchain.util.Storage;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -38,8 +38,8 @@ public class AppLifecycle {
 
         APIConfiguration apiConfig = APIConfiguration.getInstance();
 
-        KeyGenerator.generatePubAndPrivKeys(apiConfig.getId());
-        KeyGenerator.generateSSLKey(apiConfig.getId());
+        Keys.generatePubAndPrivKeys(apiConfig.getId());
+        Keys.generateSSLKey(apiConfig.getId());
 
         if (apiConfig.hasNode()) {
             node = new Node(apiConfig.getId(), apiConfig.hasSync());

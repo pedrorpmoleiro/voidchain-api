@@ -62,8 +62,7 @@ public class BlockchainManager {
                 if (Blockchain.getBlockFileHeightArray() == null || this.refreshAllBlocks) {
                     this.blockSyncClient.sync(true);
                     this.refreshAllBlocks = false;
-                }
-                else
+                } else
                     this.blockSyncClient.sync(false);
 
                 this.blockchain.reloadBlocksFromDisk();
@@ -80,7 +79,10 @@ public class BlockchainManager {
 
         this.blockchainValidationCheckThread = new Thread(() -> {
             while (true) {
-                if (!this.blockchain.isChainValid())
+                logger.info("Validating local chain");
+                boolean valid = this.blockchain.isChainValid();
+                logger.info("Local chain is " + (valid ? "valid" : "invalid, re downloading all blocks from network"));
+                if (!valid)
                     this.refreshAllBlocks = true;
 
                 try {
@@ -92,10 +94,11 @@ public class BlockchainManager {
                 }
             }
         });
-        this.blockchainValidationCheckThread.start();
 
-        if (!APIConfiguration.getInstance().hasNode())
+        if (!APIConfiguration.getInstance().hasNode()) {
             this.refreshLocalChainThread.start();
+            this.blockchainValidationCheckThread.start();
+        }
 
         this.transactionMessengerThread = new Thread(() -> {
             APIConfiguration config = APIConfiguration.getInstance();

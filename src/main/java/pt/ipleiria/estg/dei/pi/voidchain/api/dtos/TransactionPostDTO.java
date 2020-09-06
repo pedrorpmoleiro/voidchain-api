@@ -5,6 +5,7 @@ import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 
 public class TransactionPostDTO implements Serializable {
+
     @NotNull(message = "Cannot create transaction without data")
     private String data;
     @NotNull(message = "Cannot create transaction without signature")
