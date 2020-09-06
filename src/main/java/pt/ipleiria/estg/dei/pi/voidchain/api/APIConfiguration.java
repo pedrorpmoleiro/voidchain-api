@@ -154,6 +154,7 @@ public class APIConfiguration {
 
         for (String f : APIConfiguration.CONFIG_FILES) {
             String filePath = configDir + File.separator + f;
+            String filePathJar = "config/" + f;
             if (Files.notExists(Paths.get(filePath))) {
                 logger.info("Creating file '" + f + "' in 'config'");
 

@@ -1,30 +1,40 @@
-# voidchain-api project
+# API for the VOIDChain Project - A simple and high-performant distributed ledger technology platform
 
-This project uses Quarkus, the Supersonic Subatomic Java Framework.
+## Made For
+* [Polytechnic of Leiria](https://www.ipleiria.pt/)
+* [VOID Software](https://void.pt/)
 
-If you want to learn more about Quarkus, please visit its website: https://quarkus.io/ .
+# API Documenation
 
-## Running the application in dev mode
+Documentation for this API's Endpoints is available [here](https://documenter.getpostman.com/view/8998471/TVCgynHq#84bdf27c-b339-46c1-9d5b-e3d8a93e3f1b).
 
-You can run your application in dev mode that enables live coding using:
-```
-./mvnw quarkus:dev
-```
+## Description
 
-## Packaging and running the application
+## Objective
 
-The application can be packaged using `./mvnw package`.
-It produces the `voidchain-api-0.9.0-runner.jar` file in the `/target` directory.
-Be aware that it’s not an _über-jar_ as the dependencies are copied into the `target/lib` directory.
+## Built With
 
-The application is now runnable using `java -jar target/voidchain-api-0.9.0-runner.jar`.
+* [BFT-SMaRt](https://bft-smart.github.io/library/) - A high-performance Byzantine fault-tolerant state machine replication library
+* [BouncyCastle](https://bouncycastle.org/java.html)  - A cryptography API provider
+* [AdoptOpenJDK v11](https://adoptopenjdk.net/?variant=openjdk11&jvmVariant=hotspot) -  Community driven provider for OpenJDK binaries
+* [IntelliJ IDEA](https://www.jetbrains.com/idea/) - Java IDE
+* [bitcoinj](https://github.com/bitcoinj/bitcoinj) - Java implementation of Bitcoin protocol
+* [Maven](https://maven.apache.org/) - Compilation Automation and dependency manager tool
+* [Quakus](https://quarkus.io/) - The supersonic subatomic Java Framework
+* [Postman](https://www.postman.com/) - The Collaboration Platform for API Development
 
-## Creating a native executable
+## Planning tools
 
-You can create a native executable using: `./mvnw package -Pnative`.
+* [Trello](https://trello.com/) - Web-based Kanban-style list-making application 
+* [Microsoft Teams](https://products.office.com/en-us/microsoft-teams/group-chat-software/) - Unified communication and collaboration platform
+* [GitKraken Timelines](https://www.gitkraken.com/timelines) - Timeline maker for communicating project milestones & deadlines
+* [MindMeister](https://www.mindmeister.com/) - Online mind mapping application
 
-Or, if you don't have GraalVM installed, you can run the native executable build in a container using: `./mvnw package -Pnative -Dquarkus.native.container-build=true`.
+## Versioning
 
-You can then execute your native executable with: `./target/voidchain-api-0.9.0-runner`
+We used [GitKraken](https://www.gitkraken.com/) for versioning.
 
-If you want to learn more about building native executables, please consult https://quarkus.io/guides/building-native-image.
+## Authors
+
+* **Pedro Galveias - Student Number: 2161966**
+* **Pedro Moleiro - Student Number: 2171264**
