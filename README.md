@@ -4,7 +4,7 @@
 * [Polytechnic of Leiria](https://www.ipleiria.pt/)
 * [VOID Software](https://void.pt/)
 
-# API Documenation
+## API Documenation
 
 Documentation for this API's Endpoints is available [here](https://documenter.getpostman.com/view/8998471/TVCgynHq#84bdf27c-b339-46c1-9d5b-e3d8a93e3f1b).
 
