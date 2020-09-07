@@ -9,11 +9,19 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+/**
+ * The Network resource defines all possible requests related to information of the node network.
+ */
 @Path("/network")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class NetworkResource {
 
+    /**
+     * Gets leader.
+     *
+     * @return the leader
+     */
     @GET
     @Path("/leader")
     public Response getLeader() {
@@ -24,7 +32,12 @@ public class NetworkResource {
         else
             return Response.ok("Unable to get leader").build();
     }
-    
+
+    /**
+     * Gets amount of nodes.
+     *
+     * @return the amount of nodes
+     */
     @GET
     @Path("/nodes/number")
     public Response getAmountOfNodes() {

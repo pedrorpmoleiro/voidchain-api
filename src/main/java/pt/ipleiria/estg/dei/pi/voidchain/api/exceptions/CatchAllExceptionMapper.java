@@ -4,6 +4,9 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
+/**
+ * The Catch all exception mapper will catch all exceptions and return them to the client.
+ */
 @Provider
 public class CatchAllExceptionMapper implements ExceptionMapper<Exception> {
     @Override

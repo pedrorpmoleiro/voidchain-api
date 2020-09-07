@@ -4,7 +4,7 @@
 
     <groupId>pt.ipleiria.estg.dei.pi</groupId>
     <artifactId>voidchain-api</artifactId>
-    <version>0.2.2</version>
+    <version>1.0</version>
 
     <properties>
         <compiler-plugin.version>3.8.1</compiler-plugin.version>
@@ -23,7 +23,7 @@
 
         <surefire-plugin.version>3.0.0-M5</surefire-plugin.version>
 
-        <voidchain-node.version>0.9.10</voidchain-node.version>
+        <voidchain-node.version>1.0</voidchain-node.version>
     </properties>
 
     <dependencyManagement>
