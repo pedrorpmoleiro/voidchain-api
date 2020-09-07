@@ -13,6 +13,9 @@ import pt.ipleiria.estg.dei.pi.voidchain.client.ClientMessageType;
 import java.io.*;
 import java.util.List;
 
+/**
+ * The Network proxy manager is responsible for all communications between the API and the node network.
+ */
 public class NetworkProxyManager {
     private static NetworkProxyManager INSTANCE = null;
 
@@ -28,6 +31,12 @@ public class NetworkProxyManager {
         this.proxy = proxy;
     }
 
+    /**
+     * Create instance network proxy manager.
+     *
+     * @param id the id
+     * @return the network proxy manager
+     */
     public static NetworkProxyManager createInstance(int id) {
         if (INSTANCE == null)
             INSTANCE = new NetworkProxyManager(id);
@@ -35,6 +44,12 @@ public class NetworkProxyManager {
         return INSTANCE;
     }
 
+    /**
+     * Create instance network proxy manager.
+     *
+     * @param proxy the proxy
+     * @return the network proxy manager
+     */
     public static NetworkProxyManager createInstance(ServiceProxy proxy) {
         if (INSTANCE == null)
             INSTANCE = new NetworkProxyManager(proxy);
@@ -42,14 +57,29 @@ public class NetworkProxyManager {
         return INSTANCE;
     }
 
+    /**
+     * Gets instance.
+     *
+     * @return the instance
+     */
     public static NetworkProxyManager getInstance() {
         return INSTANCE;
     }
 
+    /**
+     * Gets proxy.
+     *
+     * @return the proxy
+     */
     public ServiceProxy getProxy() {
         return proxy;
     }
 
+    /**
+     * Gets most recent block height.
+     *
+     * @return the most recent block height
+     */
     public int getMostRecentBlockHeight() {
         logger.debug("Sending GET_MOST_RECENT_BLOCK_HEIGHT request to network");
         try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
@@ -84,6 +114,12 @@ public class NetworkProxyManager {
         }
     }
 
+    /**
+     * Send transaction.
+     *
+     * @param transaction the transaction
+     * @return the boolean
+     */
     public boolean sendTransaction(Transaction transaction) {
         logger.debug("Sending ADD_TRANSACTION request to network");
         try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
@@ -132,7 +168,13 @@ public class NetworkProxyManager {
         }
     }
 
-    public boolean sendTransaction(List<Transaction> transactionList) {
+    /**
+     * Send transactions.
+     *
+     * @param transactionList the transaction list
+     * @return the boolean
+     */
+    public boolean sendTransactions(List<Transaction> transactionList) {
         logger.debug("Sending ADD_TRANSACTIONS request to network");
         try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
              ObjectOutput objOut = new ObjectOutputStream(byteOut)) {
@@ -180,6 +222,11 @@ public class NetworkProxyManager {
         }
     }
 
+    /**
+     * Gets last consensus leader node.
+     *
+     * @return the last consensus leader node
+     */
     public int getLastConsensusLeaderNode() {
         logger.debug("Sending GET_LEADER request to network");
         try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
@@ -214,6 +261,12 @@ public class NetworkProxyManager {
         }
     }
 
+    /**
+     * Gets transaction status.
+     *
+     * @param transactionHash the transaction hash
+     * @return the transaction status
+     */
     public TransactionStatus getTransactionStatus(byte[] transactionHash) {
         logger.debug("Sending TRANSACTION_STATUS request to network");
         try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
@@ -248,6 +301,11 @@ public class NetworkProxyManager {
         }
     }
 
+    /**
+     * Is network chain valid boolean.
+     *
+     * @return the boolean
+     */
     public boolean isChainValid() {
         logger.debug("Sending IS_CHAIN_VALID request to network");
         try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
@@ -283,6 +341,11 @@ public class NetworkProxyManager {
         }
     }
 
+    /**
+     * Gets amount of nodes.
+     *
+     * @return the amount of nodes
+     */
     public int getAmountOfNodes() {
         logger.debug("Sending NUMBER_NODES request to network");
         try (ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
@@ -317,6 +380,9 @@ public class NetworkProxyManager {
         }
     }
 
+    /**
+     * Shutdown Network Proxy Manager and it's services.
+     */
     public void close() {
         this.proxy.close();
 

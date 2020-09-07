@@ -21,12 +21,21 @@ import javax.enterprise.event.Observes;
 import java.io.IOException;
 import java.security.Security;
 
+/**
+ * The App lifecycle class has code that should run before the start up and shutdown of quarkus.
+ */
 @ApplicationScoped
 public class AppLifecycle {
     private static final Logger logger = LoggerFactory.getLogger(AppLifecycle.class);
 
     private Node node;
 
+    /**
+     * On application start.
+     *
+     * @param ev the ev
+     * @throws IOException the io exception
+     */
     void onStart(@Observes StartupEvent ev) throws IOException {
         logger.info("The application is starting...");
 
@@ -50,6 +59,11 @@ public class AppLifecycle {
         BlockchainManager.getInstance();
     }
 
+    /**
+     * On application stop.
+     *
+     * @param ev the ev
+     */
     void onStop(@Observes ShutdownEvent ev) {
         logger.info("The application is stopping...");
         APIConfiguration apiConfig = APIConfiguration.getInstance();

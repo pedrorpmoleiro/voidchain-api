@@ -29,6 +29,10 @@ import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
 
+/**
+ * The Blockchain manager manages the local blockchain, all operations that require the local blockchain, the API memory
+ * pool and the thread which sends transactions from the API to the node network.
+ */
 public class BlockchainManager {
     private static BlockchainManager INSTANCE = null;
 
@@ -59,11 +63,12 @@ public class BlockchainManager {
 
         this.refreshLocalChainThread = new Thread(() -> {
             while (true) {
-                if (Blockchain.getBlockFileHeightArray() == null || this.refreshAllBlocks) {
-                    this.blockSyncClient.sync(true);
-                    this.refreshAllBlocks = false;
-                } else
-                    this.blockSyncClient.sync(false);
+                if (!APIConfiguration.getInstance().hasNode())
+                    if (Blockchain.getBlockFileHeightArray() == null || this.refreshAllBlocks) {
+                        this.blockSyncClient.sync(true);
+                        this.refreshAllBlocks = false;
+                    } else
+                        this.blockSyncClient.sync(false);
 
                 this.blockchain.reloadBlocksFromDisk();
 
@@ -76,6 +81,7 @@ public class BlockchainManager {
                 }
             }
         });
+        this.refreshLocalChainThread.start();
 
         this.blockchainValidationCheckThread = new Thread(() -> {
             while (true) {
@@ -95,10 +101,8 @@ public class BlockchainManager {
             }
         });
 
-        if (!APIConfiguration.getInstance().hasNode()) {
-            this.refreshLocalChainThread.start();
+        if (!APIConfiguration.getInstance().hasNode())
             this.blockchainValidationCheckThread.start();
-        }
 
         this.transactionMessengerThread = new Thread(() -> {
             APIConfiguration config = APIConfiguration.getInstance();
@@ -122,7 +126,7 @@ public class BlockchainManager {
                     }
 
                     if (!NetworkProxyManager.getInstance().
-                            sendTransaction(transactionsSend))
+                            sendTransactions(transactionsSend))
                         this.transactionPool.addAll(transactionsSend);
                 }
                 this.transactionPoolLock.unlock();
@@ -139,6 +143,11 @@ public class BlockchainManager {
         this.transactionMessengerThread.start();
     }
 
+    /**
+     * Gets instance.
+     *
+     * @return the instance
+     */
     public static BlockchainManager getInstance() {
         if (INSTANCE == null)
             INSTANCE = new BlockchainManager();
@@ -146,6 +155,13 @@ public class BlockchainManager {
         return INSTANCE;
     }
 
+    /**
+     * Create and add transaction to pool transaction.
+     *
+     * @param transactionPost the transaction post
+     * @return the transaction
+     * @throws TransactionTooBigException the transaction too big exception
+     */
     public Transaction createAndAddTransactionToPool(TransactionPostDTO transactionPost)
             throws TransactionTooBigException {
         Transaction t;
@@ -164,6 +180,13 @@ public class BlockchainManager {
         return t;
     }
 
+    /**
+     * Gets transaction.
+     *
+     * @param idString the id string
+     * @return the transaction
+     * @throws TransactionNotFoundException the transaction not found exception
+     */
     public Transaction getTransaction(String idString) throws TransactionNotFoundException {
         byte[] id = Base58.decode(idString);
 
@@ -187,10 +210,23 @@ public class BlockchainManager {
         throw new TransactionNotFoundException("Requested transaction doesn't exists in the local chain");
     }
 
+    /**
+     * Gets transaction in block.
+     *
+     * @param block the block
+     * @return the transaction in block
+     */
     public List<Transaction> getTransactionInBlock(Block block) {
         return new ArrayList<>(block.getTransactions().values());
     }
 
+    /**
+     * Gets block.
+     *
+     * @param id the id
+     * @return the block
+     * @throws BlockNotFoundException the block not found exception
+     */
     public Block getBlock(String id) throws BlockNotFoundException {
         final byte[] bId = Base58.decode(id);
 
@@ -213,6 +249,13 @@ public class BlockchainManager {
         throw new BlockNotFoundException("Requested block doesn't exists in the local chain");
     }
 
+    /**
+     * Gets block.
+     *
+     * @param blockHeight the block height
+     * @return the block
+     * @throws BlockNotFoundException the block not found exception
+     */
     public Block getBlock(int blockHeight) throws BlockNotFoundException {
         final int highestBlock = this.blockchain.getMostRecentBlock().getBlockHeight();
         if (blockHeight > highestBlock)
@@ -230,6 +273,12 @@ public class BlockchainManager {
         }
     }
 
+    /**
+     * Gets all blocks.
+     *
+     * @return the all blocks
+     * @throws InternalErrorException the internal error exception
+     */
     public List<Block> getAllBlocks() throws InternalErrorException {
         List<Block> blocks = new ArrayList<>();
         List<Integer> blocksDisk = Blockchain.getBlockFileHeightArray();
@@ -246,6 +295,12 @@ public class BlockchainManager {
         return blocks;
     }
 
+    /**
+     * Gets transaction status.
+     *
+     * @param idString the transaction id string
+     * @return the transaction status
+     */
     public TransactionStatusAPI getTransactionStatus(String idString) {
         byte[] id = Base58.decode(idString);
 
@@ -282,6 +337,11 @@ public class BlockchainManager {
         }
     }
 
+    /**
+     * Is local chain valid boolean.
+     *
+     * @return the boolean
+     */
     public boolean isChainValid() {
         if (this.blockchain.isChainValid())
             return true;
@@ -292,10 +352,22 @@ public class BlockchainManager {
         }
     }
 
+    /**
+     * Gets transaction pool.
+     *
+     * @return the transaction pool
+     */
     public List<Transaction> getTransactionPool() {
         return new ArrayList<>(this.transactionPool);
     }
 
+    /**
+     * Gets transaction of owner.
+     *
+     * @param ownerPubKey the owner pub key
+     * @return the transaction of owner
+     * @throws InternalErrorException the internal error exception
+     */
     public List<Transaction> getTransactionOfOwner(String ownerPubKey) throws InternalErrorException {
         List<Transaction> transactions = new ArrayList<>();
 
@@ -316,6 +388,9 @@ public class BlockchainManager {
         return transactions;
     }
 
+    /**
+     * Shutdown Blockchain Manager and it's services.
+     */
     public void close() {
         logger.info("Closing " + this.getClass().getName());
         try {

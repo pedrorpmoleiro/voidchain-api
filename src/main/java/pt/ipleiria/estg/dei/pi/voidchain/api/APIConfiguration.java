@@ -14,6 +14,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
 
+/**
+ * The Api configuration loads and stores the configuration variables from configuration files.
+ */
 public class APIConfiguration {
     private static APIConfiguration INSTANCE = null;
 
@@ -23,15 +26,36 @@ public class APIConfiguration {
 
     private boolean firstRun = true;
 
+    /**
+     * The constant CONFIG_FILES.
+     */
     public static final List<String> CONFIG_FILES = new ArrayList<>() {{
         add("voidchain-api.config");
     }};
 
+    /**
+     * The constant DEFAULT_ID.
+     */
     public static final int DEFAULT_ID = 1001;
+    /**
+     * The constant DEFAULT_BLOCK_SYNC_TIMER.
+     */
     public static final int DEFAULT_BLOCK_SYNC_TIMER = 30000;
+    /**
+     * The constant DEFAULT_TRANSACTION_SUBMIT_TIMER.
+     */
     public static final int DEFAULT_TRANSACTION_SUBMIT_TIMER = 5000;
+    /**
+     * The constant DEFAULT_MAX_TRANSACTION_SUBMIT.
+     */
     public static final int DEFAULT_MAX_TRANSACTION_SUBMIT = 15;
+    /**
+     * The constant DEFAULT_NODE.
+     */
     public static final boolean DEFAULT_NODE = false;
+    /**
+     * The constant DEFAULT_NODE_SYNC.
+     */
     public static final boolean DEFAULT_NODE_SYNC = false;
 
     private int id = DEFAULT_ID;
@@ -42,38 +66,72 @@ public class APIConfiguration {
     private boolean nodeSync = DEFAULT_NODE_SYNC;
 
     private APIConfiguration() {
-        this.loadConfigurationFromDisk();
     }
 
+    /**
+     * Gets instance.
+     *
+     * @return the instance
+     */
     public static APIConfiguration getInstance() {
         if (INSTANCE == null)
             INSTANCE = new APIConfiguration();
-        else
-            INSTANCE.loadConfigurationFromDisk();
+
+        INSTANCE.loadConfigurationFromDisk();
 
         return INSTANCE;
     }
 
+    /**
+     * Gets id.
+     *
+     * @return the id
+     */
     public int getId() {
         return id;
     }
 
+    /**
+     * Gets block sync timer.
+     *
+     * @return the block sync timer
+     */
     public int getBlockSyncTimer() {
         return blockSyncTimer;
     }
 
+    /**
+     * Gets send transactions timer.
+     *
+     * @return the send transactions timer
+     */
     public int getSendTransactionsTimer() {
         return transactionSubmitTimer;
     }
 
+    /**
+     * Gets max number of transaction to send.
+     *
+     * @return the max number of transaction to send
+     */
     public int getMaxNumberOfTransactionToSend() {
         return maxTransactionSubmit;
     }
 
+    /**
+     * Has node.
+     *
+     * @return the boolean
+     */
     public boolean hasNode() {
         return node;
     }
 
+    /**
+     * Has sync.
+     *
+     * @return the boolean
+     */
     public boolean hasSync() {
         if (!hasNode())
             return false;
@@ -96,9 +154,11 @@ public class APIConfiguration {
                     String aux;
                     switch (str.nextToken().trim()) {
                         case "system.voidchain.api.id":
-                            aux = str.nextToken().trim();
-                            if (aux != null)
-                                this.id = Integer.parseInt(aux);
+                            if (firstRun) {
+                                aux = str.nextToken().trim();
+                                if (aux != null)
+                                    this.id = Integer.parseInt(aux);
+                            }
                             continue;
                         case "system.voidchain.api.block_sync_timer":
                             aux = str.nextToken().trim();
@@ -142,6 +202,11 @@ public class APIConfiguration {
         }
     }
 
+    /**
+     * Create default config files.
+     *
+     * @throws IOException the io exception
+     */
     public static void createDefaultConfigFiles() throws IOException {
         Path configDir = Paths.get(Configuration.CONFIG_DIR);
 
@@ -158,7 +223,7 @@ public class APIConfiguration {
             if (Files.notExists(Paths.get(filePath))) {
                 logger.info("Creating file '" + f + "' in 'config'");
 
-                InputStream in = Storage.class.getClassLoader().getResourceAsStream(filePath);
+                InputStream in = Storage.class.getClassLoader().getResourceAsStream(filePathJar);
                 File outFile = new File(filePath);
                 FileOutputStream out = new FileOutputStream(outFile);
 

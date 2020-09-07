@@ -9,8 +9,13 @@
 Documentation for this API's Endpoints is available [here](https://documenter.getpostman.com/view/8998471/TVCgynHq#84bdf27c-b339-46c1-9d5b-e3d8a93e3f1b).
 
 ## Description
+A scalable and lightweight REST API service that clients or external services can use to communicate with the [VOIDChain](https://github.com/pedrorpmoleiro/voidchain) platform.
+
 
 ## Objective
+* Straightforward interface with the VOIDChain platform for external services wanting to communicate.
+* Lightweight and scalable API.
+* REST architecture for universal compatibility.
 
 ## Built With
 
